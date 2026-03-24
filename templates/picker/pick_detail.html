@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+{% load humanize %}
+{% block og_title %}{{ og_title }}{% endblock %}
+{% block og_description %}{{ og_description }}{% endblock %}
+{% block og_image %}{{ og_image }}{% endblock %}
+{% block og_url %}{{ og_url }}{% endblock %}
+{% block og_type %}{{ og_type }}{% endblock %}
+{% block extra_head %}
+<script type="application/ld+json" nonce="{{ CSP_NONCE }}">
+{
+  "@context": "https://schema.org",
+  "@type": "Movie",
+  "name": "{{ movie.title|default:''|escapejs }}",
+  "description": "{{ movie.overview|default:''|truncatechars:200|escapejs }}",
+  {% if movie.release_date %}"dateCreated": "{{ movie.release_date }}",{% endif %}
+  {% if movie.vote_average and movie.vote_count %}
+  "aggregateRating": {
+    "@type": "AggregateRating",
+    "ratingValue": "{{ movie.vote_average|floatformat:1 }}",
+    "ratingCount": "{{ movie.vote_count|default:1 }}",
+    "bestRating": "10",
+    "worstRating": "1"
+  },
+  {% endif %}
+  "image": "{{ og_image|escapejs }}",
+  "url": "{{ og_url|escapejs }}"
+}
+</script>
+{% endblock %}
+{% block twitter_meta %}
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="{{ og_title }}">
+<meta name="twitter:description" content="{{ og_description }}">
+<meta name="twitter:image" content="{{ og_image }}">
+{% endblock %}
+{% block content %}
+<section class="hero-section">
+  <div class="container" style="max-width:860px;">
+    <h1 class="hero-title">{{ movie.title }}</h1>
+    <p class="hero-sub">{{ movie.overview }}</p>
+    <img src="https://image.tmdb.org/t/p/w500{{ movie.poster_path }}" alt="{{ movie.title }}" loading="lazy" class="result-poster">
+    <div class="watch-links mt-3">
+      <a class="watch-link prime" href="https://www.amazon.in/s?k={{ movie.title|urlencode }}" target="_blank" rel="noopener noreferrer">
+        Watch on Amazon Prime
+      </a>
+    </div>
+  </div>
+</section>
+<section class="py-5 text-center" style="background:rgba(10,10,15,0.9);border-top:1px solid rgba(255,255,255,0.08);">
+  <div class="container px-4">
+    <p class="mb-2" style="font-size:13px;color:#aaa;letter-spacing:0.1em;text-transform:uppercase;">
+      What's YOUR film tonight?
+    </p>
+    <h2 class="mb-3" style="font-family:'Playfair Display',serif;font-size:clamp(1.2rem,4vw,1.8rem);color:#fff;line-height:1.2;">
+      Let AI pick the perfect film for your mood
+    </h2>
+    <p class="mb-4" style="color:rgba(255,255,255,0.5);font-size:14px;">
+      Free. No sign-up. Just your mood and a great film.
+    </p>
+    <a href="/" class="d-inline-block" style="background:#e50914;color:#fff;padding:14px 32px;border-radius:12px;text-decoration:none;font-size:15px;font-weight:600;max-width:100%;word-break:break-word;">
+      Pick My Film Tonight
+    </a>
+    {% if total_picks %}
+    <p class="mt-3" style="font-size:12px;color:#444;">
+      🎬 Join {{ total_picks|intcomma }} picks made so far
+    </p>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}

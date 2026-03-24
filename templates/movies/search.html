@@ -1,0 +1,481 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}
+  Search Indian Movies — MovieChoose
+{% endblock %}
+
+{% block canonical_path %}/movies/search/{% endblock %}
+
+{% block content %}
+
+<!-- Background same as homepage -->
+<div class="backdrop-overlay" style="position:fixed;top:0;left:0;right:0;bottom:0;z-index:0;background:rgba(10,10,15,0.95);"></div>
+
+<section style="position:relative;z-index:10;min-height:100vh;padding:100px 0 60px;">
+  <div class="container">
+
+    <!-- Header -->
+    <div class="text-center mb-5">
+      <p class="hero-eyebrow">Find any film</p>
+      <h1 class="hero-title">Where is it <span class="text-gold">streaming in India?</span></h1>
+      <p class="hero-sub">Search any movie — we show where to watch it across Netflix, Prime, Hotstar, ZEE5, Aha and more Indian platforms.</p>
+    </div>
+
+    <!-- Search bar -->
+    <div class="search-container" style="max-width:600px;margin:0 auto 40px;">
+
+      <!-- Search input row -->
+      <input type="text" id="search-input" class="search-input" placeholder="Type a movie name..." autocomplete="off" maxlength="200" style="width:100%;padding:16px 20px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.15);border-radius:12px;color:#fff;font-size:16px;outline:none;display:block;margin-bottom:12px;">
+
+      <!-- Language filter row -->
+      <div id="lang-filter-row"
+           class="language-grid mt-3"
+           style="justify-content:center;margin-bottom:14px;">
+        <button class="lang-btn active" data-lang="">All Languages</button>
+        <button class="lang-btn" data-lang="te">Telugu</button>
+        <button class="lang-btn" data-lang="hi">Hindi</button>
+        <button class="lang-btn" data-lang="ta">Tamil</button>
+        <button class="lang-btn" data-lang="ml">Malayalam</button>
+        <button class="lang-btn" data-lang="kn">Kannada</button>
+        <button class="lang-btn" data-lang="en">English</button>
+      </div>
+
+      <!-- Search button BELOW input -->
+      <button id="search-btn" style="width:100%;padding:14px;background:#e50914;border:none;border-radius:10px;color:#fff;font-size:15px;font-weight:600;cursor:pointer;letter-spacing:0.02em;transition:background 0.2s;">Search Movies</button>
+    </div>
+
+    <!-- Results -->
+    <div id="search-loading" style="display:none;text-align:center;padding:40px 0;color:#aaa;">Searching...</div>
+
+    <div id="search-results" style="display:none;">
+      <p id="results-count" style="font-size:13px;color:#666;margin-bottom:20px;"></p>
+      <div id="results-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px, 1fr));gap:16px;"></div>
+      <div id="search-pagination" class="text-center mt-4" style="display:none;">
+        <button id="btn-prev-page" class="btn-action btn-not-this" style="display:none;">Previous</button>
+        <span id="page-info" style="color:#666;font-size:13px;margin:0 12px;"></span>
+        <button id="btn-next-page" class="btn-action btn-not-this" style="display:none;">Next</button>
+      </div>
+    </div>
+
+    <div id="search-empty" style="display:none;text-align:center;padding:60px 0;">
+      <p style="font-size:16px;color:#666;">No movies found. Try a different title.</p>
+    </div>
+
+    <!-- Quick picks by language -->
+    <div id="quick-picks" class="mt-5">
+      <p style="font-size:13px;color:#555;text-align:center;margin-bottom:16px;">Or let us pick for you</p>
+      <div class="text-center">
+        <a href="/" style="display:inline-block;background:#e50914;color:#fff;padding:12px 32px;border-radius:10px;text-decoration:none;font-size:14px;font-weight:600;">Pick My Film Tonight</a>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- Trailer modal -->
+<div class="modal fade" id="trailerModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content cinema-modal">
+      <div class="modal-header border-0">
+        <h5 class="modal-title">Trailer</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body p-0">
+        <div style="position:relative;padding-bottom:56.25%;height:0;">
+          <iframe id="trailer-iframe" src="" frameborder="0" allow="autoplay;encrypted-media" allowfullscreen style="position:absolute;top:0;left:0;width:100%;height:100%;"></iframe>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block extra_scripts %}
+<script nonce="{{ CSP_NONCE }}">
+const Search = {
+    currentPage: 1,
+    currentQuery: '',
+    currentLang: '',
+    totalPages: 1,
+
+    init() {
+        // Wait for DOM then bind events
+        const btn = document.getElementById(
+            'search-btn'
+        );
+        const input = document.getElementById(
+            'search-input'
+        );
+
+        if (!btn || !input) {
+            console.error(
+                'Search elements not found'
+            );
+            return;
+        }
+
+        // Search button click
+        btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            this.triggerSearch();
+        });
+
+        // Enter key in input
+        input.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                this.triggerSearch();
+            }
+        });
+
+        // Language filter buttons
+        document.querySelectorAll(
+            '#lang-filter-row .lang-btn'
+        ).forEach(b => {
+            b.addEventListener('click', () => {
+                document.querySelectorAll(
+                    '#lang-filter-row .lang-btn'
+                ).forEach(x =>
+                    x.classList.remove('active')
+                );
+                b.classList.add('active');
+                this.currentLang = b.dataset.lang || '';
+                if (this.currentQuery.length >= 2) {
+                    this.doSearch(1);
+                }
+            });
+        });
+
+        // Pagination
+        document.getElementById('btn-next-page')
+            ?.addEventListener('click', () => {
+            if (this.currentPage < this.totalPages) {
+                this.doSearch(this.currentPage + 1);
+            }
+        });
+
+        document.getElementById('btn-prev-page')
+            ?.addEventListener('click', () => {
+            if (this.currentPage > 1) {
+                this.doSearch(this.currentPage - 1);
+            }
+        });
+
+        // Trailer modal cleanup
+        document.getElementById('trailerModal')
+            ?.addEventListener(
+                'hidden.bs.modal', () => {
+            const f = document.getElementById(
+                'trailer-iframe'
+            );
+            if (f) f.src = '';
+        });
+    },
+
+    triggerSearch() {
+        const input = document.getElementById(
+            'search-input'
+        );
+        const q = (input?.value || '').trim();
+        if (q.length < 2) {
+            // Visual feedback
+            if (input) {
+                input.style.borderColor = '#e50914';
+                setTimeout(() => {
+                    input.style.borderColor = (
+                        'rgba(255,255,255,0.15)'
+                    );
+                }, 2000);
+            }
+            return;
+        }
+        this.doSearch(1);
+    },
+
+    async doSearch(page) {
+        const input = document.getElementById(
+            'search-input'
+        );
+        const query = (input?.value || '').trim();
+        if (query.length < 2) return;
+
+        this.currentQuery = query;
+        this.currentPage = page;
+
+        // Show loading state
+        const loadingEl = document.getElementById(
+            'search-loading'
+        );
+        const resultsEl = document.getElementById(
+            'search-results'
+        );
+        const emptyEl = document.getElementById(
+            'search-empty'
+        );
+        const quickEl = document.getElementById(
+            'quick-picks'
+        );
+
+        if (loadingEl) loadingEl.style.display = 'block';
+        if (resultsEl) resultsEl.style.display = 'none';
+        if (emptyEl) emptyEl.style.display = 'none';
+        if (quickEl) quickEl.style.display = 'none';
+
+        try {
+            const url = (
+                `/movies/search/api/?q=`
+                + encodeURIComponent(query)
+                + `&page=${page}`
+            );
+            const resp = await fetch(url, {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+            });
+
+            if (loadingEl) {
+                loadingEl.style.display = 'none';
+            }
+
+            if (!resp.ok) {
+                if (emptyEl) {
+                    emptyEl.style.display = 'block';
+                }
+                if (quickEl) {
+                    quickEl.style.display = 'block';
+                }
+                return;
+            }
+
+            const data = await resp.json();
+            let results = data.results || [];
+
+            // Client-side language filter
+            if (this.currentLang) {
+                results = results.filter(m =>
+                    m.original_language ===
+                    this.currentLang
+                );
+            }
+
+            this.totalPages = Math.min(
+                data.total_pages || 1, 5
+            );
+
+            if (results.length === 0) {
+                if (emptyEl) {
+                    emptyEl.style.display = 'block';
+                }
+                if (quickEl) {
+                    quickEl.style.display = 'block';
+                }
+                return;
+            }
+
+            this.renderResults(results, data);
+
+        } catch (e) {
+            console.error('Search error:', e);
+            if (loadingEl) {
+                loadingEl.style.display = 'none';
+            }
+            if (emptyEl) {
+                emptyEl.style.display = 'block';
+            }
+            if (quickEl) {
+                quickEl.style.display = 'block';
+            }
+        }
+    },
+
+    renderResults(results, data) {
+        const grid = document.getElementById(
+            'results-grid'
+        );
+        const countEl = document.getElementById(
+            'results-count'
+        );
+        const resultsEl = document.getElementById(
+            'search-results'
+        );
+
+        if (!grid) return;
+        grid.innerHTML = '';
+
+        results.forEach(m => {
+            const providers = (
+                m.streaming_providers || []
+            );
+            const hasStream = (
+                m.is_streaming && providers.length > 0
+            );
+
+            const providersHTML = hasStream
+                ? providers.slice(0, 4).map(p =>
+                    p.logo_url
+                        ? `<img src="${p.logo_url}"
+                               alt="${p.name}"
+                               title="${p.name}"
+                               class="provider-logo"
+                               loading="lazy"
+                               style="width:24px;
+                                      height:24px;
+                                      border-radius:4px;"
+                               onerror="this.style.display='none'">`
+                        : `<span style="font-size:10px;
+                                        color:#aaa;">
+                               ${p.name}
+                           </span>`
+                    ).join('')
+                : `<span style="font-size:10px;
+                                color:#555;">
+                       Check availability
+                   </span>`;
+
+            const card = document.createElement('div');
+            card.className = 'search-result-card';
+            card.innerHTML = `
+              <div class="search-card-inner">
+                <img src="${m.poster_url}"
+                     alt="${m.title}"
+                     class="search-poster"
+                     loading="lazy"
+                     onerror="this.src='/static/images/no-poster.jpg'">
+                <div class="search-card-info">
+                  <h3 class="search-title">
+                    ${m.title}
+                  </h3>
+                  <p class="search-meta">
+                    ${m.release_year || ''}
+                    ${m.vote_average
+                        ? '· ⭐ '
+                          + parseFloat(m.vote_average)
+                              .toFixed(1)
+                        : ''}
+                  </p>
+                  <p class="search-overview">
+                    ${m.overview || ''}
+                  </p>
+                  <div class="streaming-row">
+                    <span class="streaming-badge-label">
+                      Streaming:
+                    </span>
+                    <div class="provider-logos-row">
+                      ${providersHTML}
+                    </div>
+                  </div>
+                  <div class="search-actions mt-2">
+                    <a href="${m.tmdb_watch_url}"
+                       target="_blank"
+                       rel="noopener noreferrer"
+                       class="btn-where-watch">
+                       Where to watch →
+                    </a>
+                    <button
+                      class="btn-play-trailer"
+                      data-tmdb-id="${m.tmdb_id}"
+                      style="display:none;">
+                      ▶ Trailer
+                    </button>
+                  </div>
+                </div>
+              </div>
+            `;
+
+            // Lazy load trailer button
+            this.loadTrailerForCard(card, m.tmdb_id);
+            grid.appendChild(card);
+        });
+
+        if (countEl) {
+            countEl.textContent = (
+                `${results.length} results for `
+                + `"${this.currentQuery}"`
+            );
+        }
+
+        // Pagination
+        const pagination = document.getElementById(
+            'search-pagination'
+        );
+        const prevBtn = document.getElementById(
+            'btn-prev-page'
+        );
+        const nextBtn = document.getElementById(
+            'btn-next-page'
+        );
+        const pageInfo = document.getElementById(
+            'page-info'
+        );
+
+        if (pagination) {
+            pagination.style.display = (
+                this.totalPages > 1 ? 'block' : 'none'
+            );
+        }
+        if (prevBtn) {
+            prevBtn.style.display = (
+                this.currentPage > 1
+                    ? 'inline-block' : 'none'
+            );
+        }
+        if (nextBtn) {
+            nextBtn.style.display = (
+                this.currentPage < this.totalPages
+                    ? 'inline-block' : 'none'
+            );
+        }
+        if (pageInfo) {
+            pageInfo.textContent = (
+                `Page ${this.currentPage}`
+                + ` of ${this.totalPages}`
+            );
+        }
+
+        if (resultsEl) {
+            resultsEl.style.display = 'block';
+        }
+    },
+
+    async loadTrailerForCard(card, tmdbId) {
+        try {
+            const r = await fetch(
+                `/pick/trailer/${tmdbId}/`
+            );
+            if (!r.ok) return;
+            const d = await r.json();
+            if (!d.trailer_key) return;
+            const btn = card.querySelector(
+                '.btn-play-trailer'
+            );
+            if (!btn) return;
+            btn.style.display = 'inline-block';
+            btn.addEventListener('click', () => {
+                const url = (
+                    `https://www.youtube.com/embed`
+                    + `/${d.trailer_key}?autoplay=1&rel=0`
+                );
+                const iframe = document.getElementById(
+                    'trailer-iframe'
+                );
+                if (iframe) iframe.src = url;
+                const modal = new bootstrap.Modal(
+                    document.getElementById(
+                        'trailerModal'
+                    )
+                );
+                modal.show();
+            });
+        } catch (e) {}
+    },
+};
+
+document.addEventListener(
+    'DOMContentLoaded', () => Search.init()
+);
+</script>
+{% endblock %}

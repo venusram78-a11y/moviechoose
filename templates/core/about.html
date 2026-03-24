@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+{% block title %}About MovieChoose{% endblock %}
+{% block content %}
+<section class="hero-section">
+  <div class="container" style="max-width:860px;">
+    <h1 class="hero-title">Built by a film lover, for film lovers</h1>
+    <p class="hero-sub">MovieChoose was born from a very specific frustration - spending more time choosing a film than actually watching one.</p>
+
+    <div class="d-flex align-items-center gap-3 mb-3">
+      <div style="width:72px;height:72px;border-radius:50%;background:#1c1c2e;border:1px solid rgba(255,255,255,0.12);display:flex;align-items:center;justify-content:center;font-weight:700;color:#f5c518;">YN</div>
+      <div>
+        <h3 class="mb-1">Founder Story</h3>
+        <p class="mb-0">Hi, I'm [Name] from Andhra Pradesh. One evening I spent 45 minutes scrolling Netflix and ended up watching nothing. I thought - what if an app could just decide for me, based on how I actually feel right now? That's MovieChoose. I wanted it to understand Indian cinema - Telugu, Tamil, Malayalam, Hindi - not just Hollywood. So I built it for us.</p>
+      </div>
+    </div>
+
+    <h3>How it works</h3>
+    <p>1) Tell us your mood -> 2) We analyse 3M+ films -> 3) Your perfect film for tonight</p>
+
+    <h3>How we make money</h3>
+    <p>MovieChoose is free and will always be free. We earn a small commission if you sign up for a streaming service through our links. This costs you nothing extra. It is what keeps the lights on. We never sell your data. Ever.</p>
+
+    <h3>Film data credit</h3>
+    <p>Film data and posters are provided by The Movie Database (TMDB). <a href="https://www.themoviedb.org" target="_blank" rel="noopener">TMDB</a>. We are grateful for their incredible open database.</p>
+
+    <h3>Contact</h3>
+    <p>Email: hello@moviechoose.com · <a href="/privacy/">Privacy Policy</a></p>
+    <p class="trust-signal">Total picks so far: <strong>{{ total_picks }}</strong></p>
+  </div>
+</section>
+{% endblock %}

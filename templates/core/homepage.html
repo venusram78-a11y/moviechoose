@@ -1,0 +1,320 @@
+{% extends 'base.html' %}
+{% load humanize %}
+{% block content %}
+<div id="background-reel" class="background-reel">
+    {% for url in backdrop_urls %}
+    <div class="backdrop-slide" data-src="{{ url }}" loading="lazy"></div>
+    {% endfor %}
+    <div class="backdrop-overlay"></div>
+</div>
+<section class="hero-section">
+    <div class="container text-center">
+        <p class="hero-eyebrow">Stop scrolling. Start watching.</p>
+        <h1 class="hero-title">What's your mood <span class="text-gold">tonight?</span></h1>
+        <p class="hero-sub">Tell us how you feel. Our AI picks the perfect film.</p>
+        <div class="picker-card" id="picker-card">
+
+            <!-- STEP 1: MOOD -->
+            <div id="step-mood" class="picker-step">
+                <p class="step-label">
+                    How are you feeling right now?
+                </p>
+                <div class="mood-grid">
+                    <button class="mood-btn" data-mood="happy">
+                        <span class="mood-emoji">😄</span>
+                        <span class="mood-label">Happy</span>
+                    </button>
+                    <button class="mood-btn" data-mood="sad">
+                        <span class="mood-emoji">😢</span>
+                        <span class="mood-label">Emotional</span>
+                    </button>
+                    <button class="mood-btn" data-mood="thrilled">
+                        <span class="mood-emoji">⚡</span>
+                        <span class="mood-label">Thrilled</span>
+                    </button>
+                    <button class="mood-btn" data-mood="romantic">
+                        <span class="mood-emoji">🥰</span>
+                        <span class="mood-label">Romantic</span>
+                    </button>
+                    <button class="mood-btn" data-mood="mindblown">
+                        <span class="mood-emoji">🤯</span>
+                        <span class="mood-label">Mind-Blown</span>
+                    </button>
+                    <button class="mood-btn" data-mood="inspired">
+                        <span class="mood-emoji">🔥</span>
+                        <span class="mood-label">Inspired</span>
+                    </button>
+                    <button class="mood-btn" data-mood="scared">
+                        <span class="mood-emoji">😱</span>
+                        <span class="mood-label">Scared</span>
+                    </button>
+                    <button class="mood-btn" data-mood="bored">
+                        <span class="mood-emoji">🥱</span>
+                        <span class="mood-label">Just Bored</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- STEP 2: LANGUAGE + PICK BUTTON -->
+            <div id="step-language"
+                 class="picker-step"
+                 style="display:none;">
+                <p class="step-label">
+                    Any language preference?
+                </p>
+                <div class="language-grid">
+                    <button class="lang-btn" data-lang="telugu">
+                        Telugu
+                    </button>
+                    <button class="lang-btn" data-lang="hindi">
+                        Hindi
+                    </button>
+                    <button class="lang-btn" data-lang="tamil">
+                        Tamil
+                    </button>
+                    <button class="lang-btn" data-lang="malayalam">
+                        Malayalam
+                    </button>
+                    <button class="lang-btn" data-lang="kannada">
+                        Kannada
+                    </button>
+                    <button class="lang-btn" data-lang="marathi">
+                        Marathi
+                    </button>
+                    <button class="lang-btn" data-lang="bengali">
+                        Bengali
+                    </button>
+                    <button class="lang-btn" data-lang="english">
+                        English
+                    </button>
+                    <button class="lang-btn active" data-lang="any">
+                        Surprise Me
+                    </button>
+                </div>
+                <button id="pick-btn" class="btn-pick-now">
+                    Pick My Film Tonight
+                </button>
+            </div>
+
+            <!-- STEP 3: LOADING -->
+            <div id="step-loading"
+                 class="picker-step"
+                 style="display:none;">
+                <div class="loading-reel">
+                    <div class="reel-spinner"></div>
+                    <p class="loading-text" id="loading-text">
+                        Finding your perfect film...
+                    </p>
+                </div>
+            </div>
+
+            <!-- STEP 4: RESULT -->
+            <div id="step-result"
+                 class="picker-step"
+                 style="display:none;">
+
+                <div id="result-card" class="result-card">
+
+                    <div class="result-poster-wrap">
+                        <img id="result-poster"
+                             src=""
+                             alt=""
+                             loading="lazy"
+                             class="result-poster">
+                        <div class="result-badge"
+                             id="result-rating">
+                        </div>
+                    </div>
+
+                    <div class="result-info">
+                        <p class="result-mood-label"
+                           id="result-mood-echo">
+                        </p>
+                        <h2 class="result-title"
+                            id="result-title">
+                        </h2>
+                        <p class="result-meta"
+                           id="result-meta">
+                        </p>
+                        <p class="result-overview"
+                           id="result-overview">
+                        </p>
+
+                        <!-- Genre tags -->
+                        <div id="result-genres"
+                             class="genre-tags"
+                             style="display:none;
+                                    flex-wrap:wrap;
+                                    gap:6px;
+                                    margin-bottom:12px;">
+                        </div>
+
+                        <!-- Streaming providers from TMDB -->
+                        <div id="result-streaming"
+                             class="streaming-section"
+                             style="display:none;">
+                        </div>
+
+                        <!-- Cast -->
+                        <div id="result-cast"
+                             class="cast-section"
+                             style="display:none;
+                                    flex-wrap:wrap;
+                                    gap:8px;
+                                    margin-bottom:14px;">
+                        </div>
+
+                        <!-- Action buttons -->
+                        <div class="result-actions">
+                            <button id="btn-trailer"
+                                    class="btn-action btn-trailer"
+                                    style="display:none;">
+                                Watch Trailer
+                            </button>
+                            <button id="btn-watched"
+                                    class="btn-action btn-watched">
+                                I Watched This!
+                            </button>
+                            <button id="btn-not-this"
+                                    class="btn-action btn-not-this">
+                                Not This Film
+                            </button>
+                            <button id="btn-share-wa"
+                                    class="btn-action btn-share">
+                                Share on WhatsApp
+                            </button>
+                        </div>
+
+                        <!-- Report -->
+                        <div class="mt-2 text-center">
+                            <button class="btn-report"
+                                    id="btn-report"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#reportModal">
+                                Report this suggestion
+                            </button>
+                        </div>
+
+                        <!-- Streak -->
+                        <div class="streak-display"
+                             id="streak-display"
+                             style="display:none;">
+                            <span class="streak-fire">🔥</span>
+                            <span id="streak-count"></span>
+                            day streak
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- Alternatives -->
+                <div class="alternatives-section"
+                     id="alternatives"
+                     style="display:none;">
+                    <p class="alternatives-label">
+                        Not feeling it? Try these:
+                    </p>
+                    <div class="alternatives-grid"
+                         id="alternatives-grid">
+                    </div>
+                </div>
+
+                <!-- Pick Again -->
+                <button id="btn-pick-again"
+                        class="btn-pick-again">
+                    Pick Another Film
+                </button>
+
+            </div>
+
+        </div>
+        <p class="trust-signal">🎬 <strong>{{ total_picks|intcomma }}</strong> films picked so far - join them.</p>
+    </div>
+</section>
+<!-- Trailer Modal -->
+<div class="modal fade"
+     id="trailerModal"
+     tabindex="-1">
+  <div class="modal-dialog
+              modal-dialog-centered
+              modal-lg">
+    <div class="modal-content cinema-modal">
+      <div class="modal-header border-0">
+        <h5 class="modal-title">Trailer</h5>
+        <button type="button"
+                class="btn-close btn-close-white"
+                data-bs-dismiss="modal">
+        </button>
+      </div>
+      <div class="modal-body p-0">
+        <div style="position:relative;
+                    padding-bottom:56.25%;
+                    height:0;">
+          <iframe id="trailer-iframe"
+                  src=""
+                  frameborder="0"
+                  allow="autoplay;encrypted-media"
+                  allowfullscreen
+                  style="position:absolute;
+                         top:0;left:0;
+                         width:100%;height:100%;">
+          </iframe>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Report Modal -->
+<div class="modal fade"
+     id="reportModal"
+     tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content cinema-modal">
+      <div class="modal-header border-0">
+        <h5 class="modal-title">
+          Report this suggestion
+        </h5>
+        <button type="button"
+                class="btn-close btn-close-white"
+                data-bs-dismiss="modal">
+        </button>
+      </div>
+      <div class="modal-body">
+        <p style="font-size:13px;color:#aaa;">
+          Help us improve. Why wasn't this right?
+        </p>
+        <div id="report-options">
+          <button class="report-opt"
+                  data-reason="wrong_mood">
+            Wrong mood match
+          </button>
+          <button class="report-opt"
+                  data-reason="wrong_language">
+            Wrong language
+          </button>
+          <button class="report-opt"
+                  data-reason="inappropriate">
+            Inappropriate content
+          </button>
+          <button class="report-opt"
+                  data-reason="already_seen">
+            Already seen this
+          </button>
+          <button class="report-opt"
+                  data-reason="bad_quality">
+            Poor quality film
+          </button>
+        </div>
+        <div id="report-thanks"
+             style="display:none;
+                    text-align:center;
+                    padding:20px 0;
+                    color:#f5c518;">
+          Thank you! Your feedback helps us.
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

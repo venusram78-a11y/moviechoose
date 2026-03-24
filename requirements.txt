@@ -1,0 +1,9 @@
+# Direct dependencies only - minimal and cross-platform
+# For exact production pins, see requirements_frozen_linux.txt
+# (generated on PythonAnywhere after first install)
+Django==4.2.16
+whitenoise==6.7.0
+python-decouple==3.8
+requests==2.31.0
+Pillow==10.4.0
+pytz==2024.1
