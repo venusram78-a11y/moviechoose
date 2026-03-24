@@ -3,7 +3,7 @@ import os
 from django.core.wsgi import get_wsgi_application
 import sys
 
-path = '/home/venusram78/moviechoose'
+path = '/home/venusram78/moviechoose/moviechoose'
 if path not in sys.path:
     sys.path.insert(0, path)
 
